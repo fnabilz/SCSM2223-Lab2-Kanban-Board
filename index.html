@@ -13,15 +13,15 @@
         <!-- all content goes here-->
         <header>
             <h1>Kanban Board</h1>
-            <div class="badge"><span class="task-counter">0</span> Tasks</div>
-            <div class="priority-header">
-                <label for="priority">Filter</label>
-                <select name="priority" id="priority-select" class="bg-low">
-                    <option value="low" class="bg-low">Low</option>
-                    <option value="medium" class="bg-medium">Medium</option>
-                    <option value="high" class="bg-high">High</option>
-                </select>
+            <div class="badge">
+                <span class="task-counter">0</span> Tasks
             </div>
+            <label for="priority">Filter</label>
+            <select name="priority" id="priority-select" class="bg-low">
+                <option value="low" class="bg-low">Low</option>
+                <option value="medium" class="bg-medium">Medium</option>
+                <option value="high" class="bg-high">High</option>
+            </select>
         </header>
         <div class="grid">
             <section class="card" id="todo">
@@ -63,26 +63,31 @@
 
     <div class="task-modal is-hidden">
         <div class="modal-content">
+
             <div class="task-title">
-                <label for="task-title">Title</label>
-                <input type="text" id="task-title">
+                <label for="title-input">Title</label>
+                <input type="text" id="title-input">
             </div>
+
             <div class="task-description">
-                <label for="task-description">Description</label>
-                <textarea type="text" id="task-description"></textarea>
+                <label for="description-input">Description</label>
+                <textarea type="text" id="description-input"></textarea>
             </div>
+
             <div class="task-date">
-                <label for="task-date">Due Date</label>
-                <input type="date" id="task-date">
+                <label for="date-input">Due Date</label>
+                <input type="date" id="date-input">
             </div>
+
             <div class="task-priority">
-                <label for="priority-select">Priority</label>
-                <select name="priority" id="priority-select">
+                <label for="priority-input">Priority</label>
+                <select name="priority" id="priority-input">
                     <option value="low">Low</option>
                     <option value="medium">Medium</option>
                     <option value="high">High</option>
                 </select>
             </div>
+            
             <button id="saveButton">Save</button>
             <button id="cancelButton">Cancel</button>
         </div>
