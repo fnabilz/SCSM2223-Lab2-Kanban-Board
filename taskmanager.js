@@ -1,206 +1,178 @@
- // JS goes here later
 // ── STATE ────────────────────────────────────────────── 
-let notes  = [];   // each entry: { id, title, content } 
+let tasks  = [
+    {id: 101, title: "Develop UI", description: "Develop simple UI for user navigation", dueDate: new Date(), priority: "High"},
+];   // each entry: { id, title, content } 
 let nextId = 1;
 
+// ELEMENT REFERENCES
+const taskCounterSpan   = document.querySelector(".task-counter");
+const gridList          = document.querySelector(".grid")
+const cardList          = document.querySelector("ul");
+const select            = document.getElementById("priority-select");
+
+const taskModal         = document.querySelector(".task-modal");
+const modalTitle        = taskModal.querySelector(".task-title");
+const modalDesc         = taskModal.querySelector(".task-description");
+const modalDate         = taskModal.querySelector(".task-date");
+const modalPriority     = taskModal.querySelector(".task-priority");
+
+
 // ── DOM REFERENCES ──────────────────────────────────── 
-const notesContainer  = document.getElementById("notesContainer"); 
-const titleInput      = document.getElementById("noteTitle"); 
-const contentInput    = document.getElementById("noteContent"); 
-const addBtn          = document.getElementById("addNoteBtn"); 
-const clearAllBtn     = document.getElementById("clearAllBtn"); 
-const noteCounterSpan = document.getElementById("noteCounter"); 
-const windowSizeSpan  = document.getElementById("windowSize"); 
-const userAgentSpan   = document.getElementById("userAgent"); 
-
-function updateCounter() { 
-    const count = notes.length; 
-    noteCounterSpan.textContent = 
-        count === 1 ? "1 note" : `${count} notes`; 
-} 
-function renderNotes() { 
-    // ── clear container safely (no innerHTML) ── 
-    while (notesContainer.firstChild) { 
-        notesContainer.removeChild(notesContainer.firstChild); 
-    } 
-    
-        // ── empty-state message ── 
-    if (notes.length === 0) { 
-        const emptyMsg = document.createElement("div"); 
-        emptyMsg.textContent = "📭📭 No notes yet. Add your first note!"; 
-        emptyMsg.style.color     = "#94a3b8"; 
-        emptyMsg.style.textAlign = "center"; 
-        emptyMsg.style.padding   = "1rem"; 
-        notesContainer.appendChild(emptyMsg); 
-        updateCounter(); 
-        return; 
-    }
-
-    
-
-    notes.forEach(note => { 
-        // wrapper div 
-        const noteDiv = document.createElement("div"); 
-        noteDiv.classList.add("note-item"); 
-        noteDiv.setAttribute("data-id", note.id); 
-    
-        // title row 
-        const titleDiv  = document.createElement("div"); 
-        titleDiv.classList.add("note-title"); 
-    
-        const titleSpan = document.createElement("span"); 
-        titleSpan.textContent = note.title; 
-            // delete button 
-        const deleteBtn = document.createElement("button"); 
-        deleteBtn.textContent = "🗑🗑 Delete"; 
-        deleteBtn.classList.add("delete-note"); 
-        deleteBtn.setAttribute("data-action", "delete"); 
-        deleteBtn.setAttribute("data-id", note.id); 
-
-        const editBtn = document.createElement("button"); 
-        editBtn.textContent = "✏ Edit"; 
-        editBtn.classList.add("edit-note");
-        editBtn.setAttribute("data-action", "edit"); 
-        editBtn.setAttribute("data-id", note.id);
-    
-        titleDiv.appendChild(titleSpan); 
-        titleDiv.appendChild(deleteBtn); 
-        titleDiv.appendChild(editBtn);
-    
-        // content paragraph 
-        const contentP = document.createElement("p"); 
-        contentP.classList.add("note-content"); 
-        contentP.textContent = note.content || "(no additional content)"; 
-    
-        noteDiv.appendChild(titleDiv); 
-        noteDiv.appendChild(contentP); 
-        notesContainer.appendChild(noteDiv); 
-    
-        
-
-    }); 
-    
-    updateCounter();
+function updateTaskCounter() { 
+    const count = tasks.length; 
+    taskCounterSpan.textContent = count; 
 } 
 
-function addNote() { 
-    const title = titleInput.value.trim(); 
-    
-    // BOM: alert() for empty-title validation 
-    if (title === "") { 
-        alert("❌ Title cannot be empty!"); 
-        titleInput.focus(); 
-        return; 
-    } 
-    
-    const content = contentInput.value.trim(); 
-    notes.push({ id: nextId++, title, content }); 
-    
-    renderNotes(); 
-    
-    // clear inputs after adding 
-    titleInput.value  = ""; 
-    contentInput.value = ""; 
-    titleInput.focus(); 
+function createTaskCard(taskObj) {
+    const li = document.createElement("li");
+    li.classList.add("card");
+    li.setAttribute("data-id", taskObj.id);
+
+    const title = document.createElement("h3");
+    title.classList.add("card-title");
+    title.textContent = taskObj.title;
+
+    const description = document.createElement('p');
+    description.classList.add("card-description");
+    description.textContent = taskObj.description;
+
+    const priorityBadge = document.createElement('span');
+    priorityBadge.classList.add("card-priority");
+    priorityBadge.textContent = taskObj.priority;
+
+    const dueDate = document.createElement('time');
+    dueDate.classList.add("card-date");
+    dueDate.textContent = taskObj.dueDate.toLocaleDateString();
+
+    const editButton = document.createElement('button');
+    editButton.textContent = 'Edit';
+    editButton.setAttribute("data-action", "edit");
+    editButton.setAttribute("data-id", taskObj.taskId);
+    editButton.classList.add('edit-button');
+
+    const deleteButton = document.createElement('button');
+    deleteButton.textContent = 'Delete';
+    deleteButton.setAttribute("data-action", "delete");
+    deleteButton.setAttribute("data-id", taskObj.taskId);
+    deleteButton.classList.add('delete-button');
+
+    // 4. Assemble everything into the <li>
+    li.append(title, description, priorityBadge, dueDate, editButton, deleteButton);
+
+    return li;
 }
 
-function deleteNoteById(id) { 
-    // BOM: confirm() returns true/false 
-    const ok = confirm("⚠ Are you sure you want to delete this note?"); 
-    if (!ok) return; 
-    
-    const index = notes.findIndex(n => n.id === id); 
-    if (index !== -1) { 
-        notes.splice(index, 1); 
-        renderNotes(); 
-    }
+function addTask(columnId, taskObj) {
+    // 1. Find the column by its ID (e.g., 'todo-column' or 'doing-column')
+    const column = document.getElementById(columnId);
+    if (!column) return; // Safety check
+
+    const taskList = column.querySelector('ul');
+
+    // 3. Create the card using our previous helper function
+    const taskCard = createTaskCard(taskObj);
+
+    // 4. Append (add) the card to the list
+    taskList.appendChild(taskCard);
+
+    tasks.push(taskObj);
+
+    updateTaskCounter();
 }
 
-function clearAllNotes() { 
-    if (notes.length === 0) { 
-        alert("📭📭 No notes to clear."); 
-        return; 
-    } 
+function deleteTask(taskId) {
+    const taskCard = document.getElementById(taskId);
+
+    taskCard.classList.add("fade-out");
+    taskCard.remove();
+
+    updateTaskCounter();
+}
+
+function editTask(taskId) {
+    const taskData = tasks[taskId];
+
+    modalTitle.textContent = taskData.title;
+    modalDesc.textContent = taskData.description;
+    modalDate.textContent = taskData.dueDate;
+    modalPriority.textContent = taskData.priority;
+    taskModal.classList.add("is-hidden", false);
+}
+
+function updateTask(taskId, updatedData) {
+    const taskData = tasks[taskId];
+
+    taskData.title = updatedData.title;
+    taskData.description = updatedData.description;
+    taskData.priority = updatedData.priority;
+    taskData.dueDate = updatedData.dueData;
+
+    const taskCard = document.getElementById(taskId);
+    const cardTitle = taskCard.getElementById("card-title");
+    cardTitle.textContent = taskData.title;
     
-    const ok = confirm( 
-        `❗ Delete ALL ${notes.length} notes? Cannot be undone.` 
-    ); 
-    if (ok) { 
-        notes  = []; 
-        nextId = 1; 
-        renderNotes(); 
-        alert("✨ All notes have been cleared.");
-    } 
-} 
-notesContainer.addEventListener("click", (e) => { 
-    // find the closest ancestor (or self) that is a delete button 
-    const btn = e.target.closest('[data-action="delete"]'); 
-    if (btn) { 
-        const id = parseInt(btn.getAttribute("data-id"), 10); 
-        deleteNoteById(id); 
-    } 
-    const editTarget = e.target.closest('[data-action="edit"]'); 
-    if (editTarget) { 
-        const id    = parseInt(editTarget.getAttribute("data-id"), 10); 
-        const found = notes.find(n => n.id === id); 
-        if (found) { 
-            // BOM: prompt() returns new string or null 
-            const newTitle = prompt("New title:", found.title); 
-            if (newTitle !== null && newTitle.trim() !== "") { 
-                found.title = newTitle.trim(); 
-                renderNotes(); 
-            } 
-        } 
-    }
-}); 
+    const cardDesc = taskCard.getElementById("card-description");
+    cardDesc.textContent = taskData.description;
 
-function updateWindowSize() { 
-    const w = window.innerWidth; 
-    const h = window.innerHeight; 
-    let category; 
-    if (w < 480)       category = "📱📱 Mobile"; 
-    else if (w < 1024) category = "💻💻 Tablet"; 
-    else               category = "🖥🖥 Desktop"; 
-    windowSizeSpan.textContent = `${w} x ${h} px  (${category})`;  
-} 
-// BOM: resize event on the window object 
-window.addEventListener("resize", updateWindowSize);
+    const cardPriority = taskCard.getElementById("card-priority");
+    cardPriority.textContent = taskData.priority;
 
-function showUserAgent() { 
-    let agent = navigator.userAgent; 
-    // trim long strings for display 
-    if (agent.length > 55) agent = agent.slice(0, 52) + "..."; 
-    userAgentSpan.textContent = agent; 
-} 
-
-function addSampleNotes() { 
-    if (notes.length === 0) { 
-        notes.push({ 
-            id: nextId++, 
-            title: "Hello BOM", 
-            content: "Try resizing the window → watch width/height update!" 
-        }); 
-        notes.push({ 
-            id: nextId++, 
-            title: "Delete me", 
-            content: "Click delete and confirm the BOM confirm box." 
-        }); 
-        renderNotes(); 
-    } 
-} 
+    const cardDate = taskCard.getElementById("card-date");
+    cardDate.textContent = taskData.dueDate.toLocaleDateString();
+}
 
 function init() { 
-    addSampleNotes();    // populate demo notes 
-    updateWindowSize();  // BOM: show current size 
-    showUserAgent();     // BOM: show user agent 
-    addBtn.addEventListener("click", addNote); 
-    clearAllBtn.addEventListener("click", clearAllNotes); 
+    tasks.forEach((taskObj) => {
+        addTask("todo", taskObj);
+    });
 
-    titleInput.addEventListener("keydown", (e) => { 
-        if (e.key === "Enter") { 
-            addNote(); 
-        } 
-    }); 
+    cardList.addEventListener("click", function(event) {
+        const button = event.target;
+        const action = button.getAttribute("data-action");
+        const taskId = button.getAttribute("data-id");
+
+        if (action == "delete")
+            deleteTask(taskId);
+        elseif (action == "edit")
+            editTask(taskId);
+    })
+
+    gridList.addEventListener("click", function(event){
+        const button = event.target;
+        const id = button.getAttribute("id");
+        const parent = button.parentElement;
+        const parentId = parent.getAttribute("id")
+
+        if (id == "addTaskButton")
+            addTask(parentId, {id: 102, title: "Develop UI", description: "Develop simple UI for user navigation", dueDate: new Date(), priority: "High"})
+            
+            
+    })
+
+    taskModal.addEventListener("click", function(event) {
+        const button = event.target;
+        const id = button.getAttribute("id");
+
+        if (id == "saveButton")
+            updateTask()
+    })
+
+    select.addEventListener('change', function() {
+        // 1. Remove any existing priority classes
+        select.classList.remove('bg-high', 'bg-medium', 'bg-low');
+
+        // 2. Get the current value
+        const val = select.value;
+
+        // 3. Add the class that matches the value
+        if (val === 'high') {
+            select.classList.add('bg-high');
+        } else if (val === 'medium') {
+            select.classList.add('bg-medium');
+        } else if (val === 'low') {
+            select.classList.add('bg-low');
+        }
+    });
 } 
 
 init();   // ← call init when the page loads

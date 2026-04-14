@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quick Notes Dashboard</title>
+    <title>Kanban Board</title>
 
     <link rel="stylesheet" href="style.css">
 </head>
@@ -12,59 +12,80 @@
     <div class="container">
         <!-- all content goes here-->
         <header>
-            <h1>📝 Quick Notes Dashboard</h1>
-            <p>Practice <strong>DOM manipulation</strong> + <strong>BOM</strong>.</p>
-            <div class="badge">🎯 Lab: BOM + DOM | pure JS</div>
+            <h1>Kanban Board</h1>
+            <div class="badge"><span class="task-counter">0</span> Tasks</div>
+            <div class="priority-header">
+                <label for="priority">Filter</label>
+                <select name="priority" id="priority-select" class="bg-low">
+                    <option value="low" class="bg-low">Low</option>
+                    <option value="medium" class="bg-medium">Medium</option>
+                    <option value="high" class="bg-high">High</option>
+                </select>
+            </div>
         </header>
         <div class="grid">
-            <div class="card" id="left-panel">
-                <h2>✏ Add a note</h2>
+            <section class="card" id="todo">
+                <h2>To Do</h2>
+                <div>
+                    <ul>
 
-                <div class="form-group">
-                    <label>📌 Title *</label>
-                    <input type="text" id="noteTitle" placeholder="e.g., DOM practice">
-                </div>
-                <div class="form-group">
-                    <label>📝 Content</label>
-                    <textarea id="noteContent" rows="2" placeholder="Write something..."></textarea>
+                    </ul>
                 </div>
 
-                <button id="addNoteBtn">+ Add Note</button>
-                <div class="counter" id="noteCounter">0 notes</div> 
-            </div>
+                <button id="addTaskButton">+ Add Task</button>
+            </section>
 
-            <div class="card" id="right-panel"> 
-                <h2>📋📋 Your notes</h2> 
-                
-                <div id="notesContainer" class="notes-list"> 
-                    <div style="color:#94a3b8;text-align:center;"> 
-                    ✨ No notes yet. Create one! 
-                    </div> 
-                </div> 
-                
-                <hr> 
-                <h2 style="font-size:1rem;">🌐 Browser info (BOM)</h2> 
-                <div class="info-panel" id="bomPanel"> 
-                    <div class="info-row"> 
-                        <span>🖥🖥 Window size:</span> 
-                        <span id="windowSize">-- x --</span> 
-                    </div> 
-                    <div class="info-row"> 
-                        <span>📱 User Agent:</span> 
-                        <span id="userAgent">--</span> 
-                    </div> 
-                </div> 
-                
-                <button id="clearAllBtn" 
-                    style="background:#64748b;margin-top:0.8rem;"> 
-                    🗑 Clear all notes 
-                </button> 
-            </div> 
+            <section class="card" id="inprogress"> 
+                <h2>In Progress</h2>
+                <div>
+                    <ul>
+                        
+                    </ul>
+                </div>
+
+                <button id="addTaskButton">+ Add Task</button>
+            </section> 
+
+             <section class="card" id="done"> 
+                <h2>Done</h2>
+                <div>
+                    <ul>
+                        
+                    </ul>
+                </div>
+
+                <button id="addTaskButton">+ Add Task</button>
+            </section>
         </div>
         <footer> 
-            💡 BOM: confirm() on delete · alert() on empty title 
-            · resize event updates window size. 
         </footer>
+    </div>
+
+    <div class="task-modal is-hidden">
+        <div class="modal-content">
+            <div class="task-title">
+                <label for="task-title">Title</label>
+                <input type="text" id="task-title">
+            </div>
+            <div class="task-description">
+                <label for="task-description">Description</label>
+                <textarea type="text" id="task-description"></textarea>
+            </div>
+            <div class="task-date">
+                <label for="task-date">Due Date</label>
+                <input type="date" id="task-date">
+            </div>
+            <div class="task-priority">
+                <label for="priority-select">Priority</label>
+                <select name="priority" id="priority-select">
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                </select>
+            </div>
+            <button id="saveButton">Save</button>
+            <button id="cancelButton">Cancel</button>
+        </div>
     </div>
 
     <script src="taskmanager.js"></script>
