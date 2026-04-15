@@ -1,12 +1,16 @@
 // ── STATE ────────────────────────────────────────────── 
 let tasks  = [];   // each entry: { id, title, content } 
+let totalTask = 0;
 let currentTaskId = 0;
+let currentColumnId = "";
 
 // ELEMENT REFERENCES
 const taskCounterSpan   = document.querySelector(".task-counter");
 const gridList          = document.querySelector(".grid")
 const cardList          = document.querySelector("ul");
-const select            = document.getElementById("priority-select");
+const selectList        = document.querySelectorAll("select");
+const titleList         = document.querySelectorAll(".card-title");
+const titleInputList    = document.querySelectorAll(".card-title-input")
 
 const taskModal         = document.querySelector(".task-modal");
 const modalTitle        = taskModal.querySelector("#title-input");
@@ -15,14 +19,13 @@ const modalDate         = taskModal.querySelector("#date-input");
 const modalPriority     = taskModal.querySelector("#priority-input");
 
 const priorityBanner = {
-    Low: "bg-low",
-    Medium: "bg-medium",
-    High: "bg-high",
+    "low": {label: "Low", class: "bg-low"},
+    "medium": {label: "Medium", class: "bg-medium"},
+    "high": {label: "High", class: "bg-high"},
 }
 
 function updateTaskCounter() { 
-    const count = tasks.length; 
-    taskCounterSpan.textContent = count; 
+    taskCounterSpan.textContent = totalTask; 
 } 
 
 function createTaskCard(taskObj) {
@@ -34,6 +37,9 @@ function createTaskCard(taskObj) {
     const title = document.createElement("h3");
     title.classList.add("card-title");
     title.textContent = taskObj.title;
+    const titleInput = document.createElement("input");
+    titleInput.classList.add("card-title-input");
+    titleInput.style.display = "none";
 
     const div = document.createElement("div")
 
@@ -42,13 +48,13 @@ function createTaskCard(taskObj) {
     description.textContent = taskObj.description;
 
     const priorityBadge = document.createElement('span');
-    const priorityClass = priorityBanner[taskObj.priority];
+    const priorityClass = priorityBanner[taskObj.priority].class;
     priorityBadge.classList.add("card-priority", priorityClass);
-    priorityBadge.textContent = taskObj.priority;
+    priorityBadge.textContent = priorityBanner[taskObj.priority].label;
 
     const dueDate = document.createElement('time');
     dueDate.classList.add("card-date");
-    dueDate.textContent = taskObj.dueDate.toLocaleDateString();
+    dueDate.textContent = `Due: ${taskObj.dueDate}`;
 
     const editButton = document.createElement('button');
     editButton.textContent = 'Edit';
@@ -62,74 +68,100 @@ function createTaskCard(taskObj) {
     deleteButton.setAttribute("data-id", taskObj.id);
     deleteButton.classList.add('delete-button');
 
-    
-
     // 4. Assemble everything into the <li>
     div.append(description, priorityBadge, dueDate);
-    li.append(title, div, editButton, deleteButton);
+    li.append(title, titleInput, div, editButton, deleteButton);
 
     return li;
 }
 
+function getDate(today) {
+    const year = today.getFullYear();
+  
+    const month = String(today.getMonth() + 1).padStart(2, '0'); 
+    const day = String(today.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
+}
+
 function addTask(columnId, taskObj) {
-    // 1. Find the column by its ID (e.g., 'todo-column' or 'doing-column')
-    const column = document.getElementById(columnId);
+    const column = document.getElementById(columnId); // "todo", "inprogress", "done"
     if (!column) return; // Safety check
 
     const taskList = column.querySelector('ul');
-
-    // 3. Create the card using our previous helper function
-    currentTaskId = currentTaskId + 1;
-    taskObj.id = currentTaskId
+    taskObj.id = tasks.length + 1;
+    taskObj.columnId = columnId;
     const taskCard = createTaskCard(taskObj);
 
-    // 4. Append (add) the card to the list
     taskList.appendChild(taskCard);
-
     tasks.push(taskObj);
+    totalTask = totalTask + 1;
 
     updateTaskCounter();
 }
 
 function deleteTask(taskId) {
-    const taskCard = document.getElementById(taskId);
-
+    const taskCard = document.querySelector(`[data-id="${taskId}"]`);
+    if (taskCard == null) return;
     taskCard.classList.add("fade-out");
     taskCard.remove();
 
+    totalTask = totalTask - 1;
     updateTaskCounter();
 }
 
 function editTask(taskId) {
     const taskObj = tasks.find(obj => obj.id == taskId);
+    currentTaskId = taskId;
 
-    modalTitle.textContent = taskObj.title;
-    modalDesc.textContent = taskObj.description;
-    modalDate.textContent = taskObj.dueDate;
-    modalPriority.textContent = taskObj.priority;
-    taskModal.classList.toggle("is-hidden", false);
+    modalTitle.value = taskObj.title;
+    modalDesc.value = taskObj.description;
+    modalDate.value = taskObj.dueDate;
+    modalPriority.value = taskObj.priority;
+    const priorityClass = priorityBanner[taskObj.priority].class;
+    modalPriority.classList.add(priorityClass);
+
+    taskModal.classList.remove("is-hidden");
 }
 
 function updateTask(taskId, updatedData) {
-    const taskObj = tasks.find(obj => obj.id === taskId);
+    const taskObj = tasks.find(obj => obj.id == taskId);
+    if (taskObj == null) return;
 
     taskObj.title = updatedData.title;
     taskObj.description = updatedData.description;
     taskObj.priority = updatedData.priority;
-    taskObj.dueDate = updatedData.dueData;
+    taskObj.dueDate = updatedData.dueDate;
 
-    const taskCard = document.getElementById(taskId);
-    const cardTitle = taskCard.getElementById("card-title");
+    const taskCard = document.querySelector(`[data-id="${taskId}"]`);
+    const cardTitle = taskCard.querySelector(".card-title");
     cardTitle.textContent = taskObj.title;
     
-    const cardDesc = taskCard.getElementById("card-description");
+    const cardDesc = taskCard.querySelector(".card-description");
     cardDesc.textContent = taskObj.description;
 
-    const cardPriority = taskCard.getElementById("card-priority");
-    cardPriority.textContent = taskObj.priority;
+    const cardPriority = taskCard.querySelector(".card-priority");
+    cardPriority.textContent = priorityBanner[taskObj.priority].label;
+    cardPriority.classList.remove('bg-high', 'bg-medium', 'bg-low');
+    cardPriority.classList.add(priorityBanner[taskObj.priority].class);
 
-    const cardDate = taskCard.getElementById("card-date");
-    cardDate.textContent = taskObj.dueDate.toLocaleDateString();
+    const cardDate = taskCard.querySelector(".card-date");
+    cardDate.textContent = `Due: ${taskObj.dueDate}`;
+
+    taskModal.classList.add("is-hidden");
+}
+
+function toggleCard(priority) {
+    tasks.forEach(taskObj => {
+        const taskCard = document.querySelector(`[data-id="${taskObj.id}"]`);
+        if (taskCard == null) return;
+        if (priority == "all")
+            taskCard.classList.toggle("is-hidden", false);
+        else if (taskObj.priority === priority)
+            taskCard.classList.toggle("is-hidden", false);
+        else
+            taskCard.classList.toggle("is-hidden", true);
+    })
 }
 
 function init() { 
@@ -138,21 +170,46 @@ function init() {
         {
             title: "Develop UI", 
             description: "Develop simple UI for user navigation", 
-            dueDate: new Date(), 
-            priority: "High",
+            dueDate: getDate(new Date()), 
+            priority: "high",
         }
     );
-
-    cardList.addEventListener("click", function(event) {
-        const button = event.target;
-        const action = button.getAttribute("data-action");
-        const taskId = button.getAttribute("data-id");
-
-        if (action == "delete")
-            deleteTask(taskId);
-        else if (action == "edit")
-            editTask(taskId);
-    });
+    addTask(
+        "inprogress", 
+        {
+            title: "Develop UI 2", 
+            description: "Develop simple UI for user navigation 2", 
+            dueDate: getDate(new Date()), 
+            priority: "low",
+        }
+    );
+    addTask(
+        "inprogress", 
+        {
+            title: "Develop UI 3", 
+            description: "Develop simple UI for user navigation 3", 
+            dueDate: getDate(new Date()), 
+            priority: "low",
+        }
+    );
+    addTask(
+        "done", 
+        {
+            title: "Develop UI 4", 
+            description: "Develop simple UI for user navigation 4", 
+            dueDate: getDate(new Date()), 
+            priority: "medium",
+        }
+    );
+    addTask(
+        "done", 
+        {
+            title: "Develop UI 5", 
+            description: "Develop simple UI for user navigation 5", 
+            dueDate: getDate(new Date()), 
+            priority: "low",
+        }
+    );
 
     gridList.addEventListener("click", function(event){
         const button = event.target;
@@ -160,21 +217,122 @@ function init() {
         const parent = button.parentElement;
         const parentId = parent.getAttribute("id")
 
-        if (id == "addTaskButton")
-            addTask(parentId, {id: 102, title: "Develop UI", description: "Develop simple UI for user navigation", dueDate: new Date(), priority: "High"})
-            
-            
+        if (id == "addTaskButton") {
+            currentColumnId = parentId;
+            modalTitle.value = "";
+            modalDesc.value = "";
+            modalDate.value = "";
+            modalPriority.value = "";
+            taskModal.classList.remove("is-hidden");
+        }
+        else if (id == "clearButton") {
+            tasks.forEach(taskObj => {
+                if (taskObj.columnId === "done") {
+                   deleteTask(taskObj.id);
+                }
+            })
+        }
+        else {
+            const action = button.getAttribute("data-action");
+            const taskId = button.getAttribute("data-id");
+
+            if (action == "delete")
+                deleteTask(taskId);
+            else if (action == "edit")
+                editTask(taskId);
+        }
+    });
+
+    gridList.addEventListener("dblclick", function(event){
+        const title = event.target;
+        if (title.classList.contains("card-title")) {
+            const parent = title.parentElement;
+            const titleInput = parent.querySelector(".card-title-input");
+
+            title.style.display = "none";
+            titleInput.style.display = "block";
+        }
+    });
+
+    gridList.addEventListener('keydown', function(event) {
+      
+        if (!event.target.classList.contains('card-title-input'))
+            return; // Stops the function immediately
+
+        if (event.key === 'Enter') {
+            const parent = event.target.parentElement;
+            const taskId = parent.getAttribute("data-id");
+            const taskObj = tasks.find(obj => obj.id == taskId);
+            const titleInput = parent.querySelector(".card-title-input");
+            const title = parent.querySelector(".card-title");
+            if (titleInput.value !== "") {
+                taskObj.title = titleInput.value;
+                updateTask(taskId, taskObj);
+
+                title.style.display = "block";
+                event.target.style.display = "none";
+            }
+            else {
+                title.style.display = "block";
+                event.target.style.display = "none";
+            }
+        }
+    });
+
+    gridList.addEventListener('focusout', function(event) {
+        if (!event.target.classList.contains('card-title-input'))
+            return; // Stops the function immediately
+
+        const parent = event.target.parentElement;
+        const taskId = parent.getAttribute("data-id");
+        const taskObj = tasks.find(obj => obj.id == taskId);
+        const title = parent.querySelector(".card-title");
+        
+        if (event.target.value !== "") {
+          
+            taskObj.title = event.target.value;
+            updateTask(taskId, taskObj);
+
+            title.style.display = "block";
+            event.target.style.display = "none";
+        }
+        else {
+            event.target.value = taskObj.title;
+            title.style.display = "block";
+            event.target.style.display = "none";
+        }
     });
 
     taskModal.addEventListener("click", function(event) {
         const button = event.target;
         const id = button.getAttribute("id");
 
-        if (id == "saveButton")
-            updateTask()
+        if (id == "saveButton") {
+            if (currentTaskId > 0) {
+                updateTask(currentTaskId, {
+                    title: modalTitle.value,
+                    description: modalDesc.value,
+                    priority: modalPriority.value,
+                    dueDate: modalDate.value,
+                });
+            }
+            else {
+                addTask(currentColumnId, {
+                    title: modalTitle.value,
+                    description: modalDesc.value,
+                    priority: modalPriority.value,
+                    dueDate: modalDate.value,
+                });
+                taskModal.classList.add("is-hidden");
+            }
+        }
+        else if (id == "cancelButton") {
+            taskModal.classList.add("is-hidden");
+            currentTaskId = 0;
+        }
     });
 
-    select.addEventListener('change', function(event) {
+    selectList.forEach(select => select.addEventListener('change', function(event) {
         // 1. Remove any existing priority classes
         select.classList.remove('bg-high', 'bg-medium', 'bg-low');
 
@@ -182,14 +340,17 @@ function init() {
         const val = event.target.value;
 
         // 3. Add the class that matches the value
-        if (val === 'high') {
+        if (val == 'high')
             select.classList.add('bg-high');
-        } else if (val === 'medium') {
+        else if (val == 'medium') 
             select.classList.add('bg-medium');
-        } else if (val === 'low') {
+        else if (val == 'low') 
             select.classList.add('bg-low');
-        }
-    });
+        else 
+            select.classList.remove('bg-high', 'bg-medium', 'bg-low');
+    
+        toggleCard(val);
+    }));
 } 
 
 init();   // ← call init when the page loads

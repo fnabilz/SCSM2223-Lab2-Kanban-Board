@@ -10,19 +10,20 @@
 <body>
 
     <div class="container">
-        <!-- all content goes here-->
         <header>
             <h1>Kanban Board</h1>
             <div class="badge">
                 <span class="task-counter">0</span> Tasks
             </div>
             <label for="priority">Filter</label>
-            <select name="priority" id="priority-select" class="bg-low">
+            <select name="priority" id="priority-select">
+                <option value="all">All</option>
                 <option value="low" class="bg-low">Low</option>
                 <option value="medium" class="bg-medium">Medium</option>
                 <option value="high" class="bg-high">High</option>
             </select>
         </header>
+
         <div class="grid">
             <section class="card" id="todo">
                 <h2>To Do</h2>
@@ -55,6 +56,7 @@
                 </div>
 
                 <button id="addTaskButton">+ Add Task</button>
+                <button id="clearButton">Clear All</button>
             </section>
         </div>
         <footer> 
@@ -79,12 +81,13 @@
                 <input type="date" id="date-input">
             </div>
 
-            <div class="task-priority">
+            <div class="card-priority">
                 <label for="priority-input">Priority</label>
                 <select name="priority" id="priority-input">
-                    <option value="low">Low</option>
-                    <option value="medium">Medium</option>
-                    <option value="high">High</option>
+                    <option value="" disabled selected hidden></option>
+                    <option value="low" class="bg-low">Low</option>
+                    <option value="medium" class="bg-medium">Medium</option>
+                    <option value="high" class="bg-high">High</option>
                 </select>
             </div>
             

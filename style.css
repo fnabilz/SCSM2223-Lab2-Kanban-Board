@@ -111,12 +111,12 @@ header h1 {
     font-size: 0.8rem; 
     color: var(--clr-light-a0); 
     padding: .5rem;
-    width: 30%;
+    width: fit-content;
     text-align: center;
 }
 
 .task-card button {
-    margin: 1rem 1rem 0 0;
+    margin: .5rem 1rem 0 0;
 }
 
 .card h2 {
@@ -219,4 +219,19 @@ footer {
 
 .is-hidden {
     display: none;
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1; /* Fully visible */
+  }
+  to {
+    opacity: 0; /* Fully invisible */
+  }
+}
+
+/* 2. Create the class you will trigger with JavaScript */
+.fade-out {
+  /* animation-name | duration | easing | fill-mode */
+  animation: fadeOut 1s ease-out forwards;
 }
