@@ -349,7 +349,8 @@ function init() {
         else 
             select.classList.remove('bg-high', 'bg-medium', 'bg-low');
     
-        toggleCard(val);
+        if (select.id == "priority-select")
+            toggleCard(val);
     }));
 } 
 
